@@ -1,0 +1,29 @@
+* Install
+  - conda install numpy
+  - conda install matplotlib
+  - conda install skrlearn
+  - conda install nltk
+  - https://spacy.io/usage
+    -> conda install -c conda-forge spacy
+    -> conda install -c conda-forge cupy
+    -> python -m spacy download zh_core_web_trf
+    -> python -m spacy download en_core_web_trf
+    -> python -m spacy download xx_sent_ud_sm
+  - pip install jieba
+  - https://github.com/lancopku/pkuseg-python
+    -> pip3 install -U pkuseg
+  - pip install wn
+  - conda install transformers
+  - https://github.com/NVIDIA/apex
+    -> git clone https://github.com/NVIDIA/apex
+    -> cd apex
+    -> pip install -v --disable-pip-version-check --no-cache-dir --no-build-isolation --config-settings "--build-option=--cpp_ext" --config-settings "--build-option=--cuda_ext" ./
+  - https://pytorch.org/
+    -> conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch-nightly -c nvidia
+  - pip install torchtext
+  - pip install tensorboard
+
+
+
+* Docker
+  - https://catalog.ngc.nvidia.com/orgs/nvidia/containers/pytorch
