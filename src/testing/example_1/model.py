@@ -17,7 +17,7 @@ class WordRNN(nn.Module):
 
     def forward(self, input_tensor, hidden):
         word_vector = self.embedding(input_tensor)
-        print(f"{word_vector}")
+        # print(f"{word_vector}")
         combined = torch.cat((word_vector, hidden), 1)
         hidden = self.i2h(combined)
         output = self.i2o(combined)
