@@ -24,6 +24,9 @@
   - pip install tensorboard
 
 
+* Dia
+  - sudo apt-get install dia
+
 
 * Docker
   - https://catalog.ngc.nvidia.com/orgs/nvidia/containers/pytorch
