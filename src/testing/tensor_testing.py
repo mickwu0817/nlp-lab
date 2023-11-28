@@ -21,8 +21,8 @@ def demo_shap_dtype():
 
 
 def demo_cat():
-    t1 = torch.tensor([1, 2, 3])
-    t2 = torch.tensor([4, 5, 6])
+    t1 = torch.tensor([[1, 2, 3]])
+    t2 = torch.tensor([[4, 5, 6]])
     t = torch.cat((t1, t2), 0)
     print(f"{t1.shape} : {t1}")
     print(f"{t2.shape} : {t2}")
@@ -98,7 +98,7 @@ def demo_repeat():
 
 if __name__ == '__main__':
     # demo_shap_dtype()
-    # demo_cat()
+    demo_cat()
     # demo_stack()
     # demo_chunk()
     # demo_reshape()
@@ -106,7 +106,7 @@ if __name__ == '__main__':
     # demo_sequeeze()
     # demo_unsequeeze()
     # demo_expand()
-    demo_repeat()
+    # demo_repeat()
 
     pass
 

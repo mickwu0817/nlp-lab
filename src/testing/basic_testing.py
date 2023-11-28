@@ -14,7 +14,7 @@ def try_get_word_frequencey1():
     f = open('../../data/从百草园到三味书屋.txt', encoding='utf8')  # encoding 要使用和这个文件对应的编码
     txt = f.read()  # 读取全部字符
     f.close()
-
+    # Key Function
     word_frequency = util.get_word_frequency(txt)
     key_list = list(word_frequency.keys())
     print(type(word_frequency))
@@ -40,6 +40,7 @@ def try_get_word_frequencey2():
     academy_text = ''.join(academy_titles)
     job_text = ''.join(job_titles)
     all_text = academy_text + job_text
+    # Key Function
     word_frequency = util.get_word_frequency(all_text)
     print(len(word_frequency.keys()))
 
@@ -75,7 +76,7 @@ if __name__ == '__main__':
     # try_gpu()
     # try_get_word_frequencey1()
     # try_get_word_frequencey2()
-    try_get_vocabulary_frequencey()
+    # try_get_vocabulary_frequencey()
     # try_stringio()
 
 

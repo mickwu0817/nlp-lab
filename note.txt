@@ -66,3 +66,8 @@
     -> docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 -it --rm nvcr.io/nvidia/pytorch:23.10-py3
     -> docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 -it
 
+* vocabulary
+  - https://language.moe.gov.tw/001/Upload/Files/site_content/M0001/respub/index.html
+  - https://language.moe.gov.tw/001/Upload/Files/site_content/M0001/respub/dict_reviseddict_download.html
+
+
