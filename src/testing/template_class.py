@@ -1,6 +1,12 @@
 import torch
 from torch.nn import Module
 
+"""
+* Model : torch.nn.Module
+* Focus on forward
+  - Model 3 Status : Structure, Code, and Math
+"""
+
 
 class TemplateModel(Module):
     """ Model Template"""
