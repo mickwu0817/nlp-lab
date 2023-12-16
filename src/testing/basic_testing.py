@@ -79,6 +79,10 @@ if __name__ == '__main__':
     # try_get_vocabulary_frequencey()
     # try_stringio()
 
+    text = '大家好ABC'
+    for i, word in enumerate(text):
+        print(f"{i}:{word}")
+
 
     pass
 
