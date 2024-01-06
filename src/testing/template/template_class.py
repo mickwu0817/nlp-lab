@@ -1,3 +1,5 @@
+from random import random
+
 import torch
 import torch.nn as nn
 
@@ -65,9 +67,35 @@ class Template2RNN(nn.Module):
 
 
 ## Se12Seq #################################################################################
+class Encoder(nn.Module):
+    def __init__(self, input_size: int, embedding_size: int, hidden_size: int, layer_size: int, dropout_ratio: float):
+        super().__init__()
+        self.hidden_size = hidden_size
+        self.layer_size = layer_size
+        self.embedding = nn.Embedding(input_size, embedding_size)
+        self.rnn = nn.LSTM(embedding_size, hidden_size, layer_size, dropout=dropout_ratio)
+        self.dropout = nn.Dropout(dropout_ratio)
+
+    def forward(self, input_tensor):
+        # input_tensor = [input_size, batch_size]
+        embedded = self.dropout(self.embedding(input_tensor))
+        # embedded = [input_size, batch_size, embedding_size]
+        outputs, (hidden, cell) = self.rnn(embedded)
+        # outputs = [input_size, batch_size, hidden_size * n directions]
+        # hidden = [layer_size * n directions, batch_size, hidden_size]
+        # cell = [layer_size * n directions, batch_size, hidden_size]
+        # outputs are always from the top hidden layer
+        return hidden, cell
+
+
+
+
+
+
+
+
 class TemplateSeq2Seq(nn.Module):
-    def __init__(self, input_word_count, output_word_count, encode_dim, decode_dim, hidden_dim, n_layers,
-                 encode_dropout, decode_dropout, device):
+    def __init__(self, input_word_count, output_word_count, encode_dim, decode_dim, hidden_dim, n_layers, encode_dropout, decode_dropout, device):
         super().__init__()
         self.encoder = nn.Encoder(input_word_count, encode_dim, hidden_dim, n_layers, encode_dropout)
         self.decoder = nn.Decoder(output_word_count, decode_dim, hidden_dim, n_layers, decode_dropout)
