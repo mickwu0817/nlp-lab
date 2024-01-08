@@ -22,11 +22,13 @@ class TemplateModel(nn.Module):
 
 
 ## RNN #################################################################################
-class Template1RNN(nn.Module):
-    """ RNN Template"""
+class SelfRNN(nn.Module):
+    """
+    Self RNN : 需自己建立 Loop 處理
+    """
 
     def __init__(self, word_count, embedding_size, hidden_size, output_size):
-        super(Template1RNN, self).__init__()
+        super(SelfRNN, self).__init__()
 
         self.hidden_size = hidden_size
         self.embedding = torch.nn.Embedding(word_count, embedding_size)
@@ -46,11 +48,13 @@ class Template1RNN(nn.Module):
         return torch.zeros(1, self.hidden_size)
 
 
-class Template2RNN(nn.Module):
-    """ RNN Template"""
+class PyTorchRNN(nn.Module):
+    """
+    PyTorch RNN : 不再需要自己使用 Loop 處理 Token, 而是可以一次傳入所有 Tokens
+    """
 
     def __init__(self, word_count: int, embedding_size: int, hidden_size: int, output_size: int, num_layers: int):
-        super(Template2RNN, self).__init__()
+        super(PyTorchRNN, self).__init__()
         self.hidden_size = hidden_size
         self.embedding = torch.nn.Embedding(word_count, embedding_size)
         self.rnn = nn.RNN(embedding_size, hidden_size, num_layers=num_layers, bidirectional=False, batch_first=True)
@@ -76,66 +80,99 @@ class Encoder(nn.Module):
         self.rnn = nn.LSTM(embedding_size, hidden_size, layer_size, dropout=dropout_ratio)
         self.dropout = nn.Dropout(dropout_ratio)
 
-    def forward(self, input_tensor):
-        # input_tensor = [input_size, batch_size]
+    def forward(self, input_tensor: torch.Tensor):
+        """
+        input_tensor = [input_size, batch_size] # for transfer so batch_size in dimension 1, see last is output
+        embedded = [input_size, batch_size, embedding_size]
+        outputs  = [input_size, batch_size, hidden_size * n directions]
+        hidden   = [layer_size * n directions, batch_size, hidden_size]
+        cell     = [layer_size * n directions, batch_size, hidden_size]
+        outputs are always from the top hidden layer
+        """
         embedded = self.dropout(self.embedding(input_tensor))
-        # embedded = [input_size, batch_size, embedding_size]
         outputs, (hidden, cell) = self.rnn(embedded)
-        # outputs = [input_size, batch_size, hidden_size * n directions]
-        # hidden = [layer_size * n directions, batch_size, hidden_size]
-        # cell = [layer_size * n directions, batch_size, hidden_size]
-        # outputs are always from the top hidden layer
         return hidden, cell
 
 
-
-
-
-
-
-
-class TemplateSeq2Seq(nn.Module):
-    def __init__(self, input_word_count, output_word_count, encode_dim, decode_dim, hidden_dim, n_layers, encode_dropout, decode_dropout, device):
+class Decoder(nn.Module):
+    def __init__(self, output_size: int, embedding_size: int, hidden_size: int, layer_size: int, dropout_ratio: float):
         super().__init__()
-        self.encoder = nn.Encoder(input_word_count, encode_dim, hidden_dim, n_layers, encode_dropout)
-        self.decoder = nn.Decoder(output_word_count, decode_dim, hidden_dim, n_layers, decode_dropout)
+        self.output_size = output_size
+        self.hidden_size = hidden_size
+        self.layer_size = layer_size
+        self.embedding = nn.Embedding(output_size, embedding_size)
+        self.rnn = nn.LSTM(embedding_size, hidden_size, layer_size, dropout=dropout_ratio)
+        self.linear = nn.Linear(hidden_size, output_size)
+        self.dropout = nn.Dropout(dropout_ratio)
+
+    def forward(self, input_tensor: torch.Tensor, hidden, cell):
+        """
+        input_tensor  = [batch size]
+        hidden = [layer_size * n directions, batch_size, hidden_size]
+        cell   = [layer_size * n directions, batch_size, hidden_size]
+        "n directions in the decoder will both always be 1", therefore:
+        hidden = [layer_size, batch_size, hidden_size]
+        context = [layer_size, batch_size, hidden_size]
+        input_tensor = [1, batch size]
+        embedded = [1, batch size, emb dim]
+
+        output = [seqence_size, batch_size, hidden_size * n directions]
+        hidden = [layer_size * n directions, batch_size, hidden_size]
+        cell   = [layer_size * n directions, batch_size, hidden_size]
+        "seqence_size and n directions will always be 1 in the decoder", therefore:
+        output = [1, batch_size, hidden_size]
+        hidden = [layer_size, batch_size, hidden_size]
+        cell   = [layer_size, batch_size, hidden_size]
+        prediction = [batch_size, output_size]
+        """
+        input_tensor = input_tensor.unsqueeze(0)
+        embedded = self.dropout(self.embedding(input_tensor))
+        output, (hidden, cell) = self.rnn(embedded, (hidden, cell))
+        prediction = self.linear(output.squeeze(0))
+        return prediction, hidden, cell
+
+
+class Seq2Seq(nn.Module):
+    def __init__(self, input_total_word_size, output_word_size, encode_embedding_size, decode_embedding_size,
+                       hidden_size: int, layer_size: int, encode_dropout_ratio: float, decode_dropouts_ratio: float, device):
+        super().__init__()
+        self.encoder = Encoder(input_total_word_size, encode_embedding_size, hidden_size, layer_size, encode_dropout_ratio)
+        self.decoder = Decoder(output_word_size, decode_embedding_size, hidden_size, layer_size, decode_dropouts_ratio)
         self.device = device
 
-    def forward(self, src, trg, teacher_forcing_ratio=0.5):
-        # src = [src len, batch size]
-        # trg = [trg len, batch size]
-        # teacher_forcing_ratio is probability to use teacher forcing
-        # e.g. if teacher_forcing_ratio is 0.75 we use ground-truth inputs 75% of the time
-        batch_size = trg.shape[1]
-        trg_len = trg.shape[0]
-        trg_vocab_size = self.decoder.output_dim
-        # tensor to store decoder outputs
-        outputs = torch.zeros(trg_len, batch_size, trg_vocab_size).to(self.device)
+    def forward(self, sorce_tensors, target_tensors, teacher_forcing_ratio=0.5):
+        """
+        srsorce_tensors = [sorce_tensor_size, batch_size]
+        target_tensors = [target_tensor_size, batch size]
+        teacher_forcing_ratio is probability to use teacher forcing
+        e.g. if teacher_forcing_ratio is 0.75 we use ground-truth inputs 75% of the time
 
-        # last hidden state of the encoder is used as the initial hidden state of the decoder
-        hidden, cell = self.encoder(src)
+        tensor to store decoder outputs
+        last hidden state of the encoder is used as the initial hidden state of the decoder
+        first input to the decoder is the <sos> tokens
 
-        # first input to the decoder is the <sos> tokens
-        input = trg[0, :]
+        In Loop
+        insert input token embedding, previous hidden and previous cell states
+        receive output tensor (predictions) and new hidden and cell states
+        place predictions in a tensor holding predictions for each token
+        decide if we are going to use teacher forcing or not
+        get the highest predicted token from our predictions
+        if teacher forcing, use actual next token as next input
+        if not, use predicted token
+        """
+        batch_size = target_tensors.shape[1]
+        target_tensor_size = target_tensors.shape[0]
+        target_single_word_size = self.decoder.output_size
+        outputs = torch.zeros(target_tensor_size, batch_size, target_single_word_size).to(self.device)
 
-        for t in range(1, trg_len):
-            # insert input token embedding, previous hidden and previous cell states
-            # receive output tensor (predictions) and new hidden and cell states
-            output, hidden, cell = self.decoder(input, hidden, cell)
-
-            # place predictions in a tensor holding predictions for each token
-            outputs[t] = output
-
-            # decide if we are going to use teacher forcing or not
+        hidden, cell = self.encoder(sorce_tensors)
+        input_single_word = target_tensors[0, :]
+        for t in range(1, target_tensor_size):
+            output_single_word, hidden, cell = self.decoder(input_single_word, hidden, cell)
+            outputs[t] = output_single_word
             teacher_force = random.random() < teacher_forcing_ratio
-
-            # get the highest predicted token from our predictions
-            top1 = output.argmax(1)
-
-            # if teacher forcing, use actual next token as next input
-            # if not, use predicted token
-            input = trg[t] if teacher_force else top1
-
+            top1 = output_single_word.argmax(1)
+            input_single_word = target_tensors[t] if teacher_force else top1
         return outputs
 
 
