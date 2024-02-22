@@ -23,6 +23,7 @@
     -> conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
   - pip install torchtext
   - pip install tensorboard
+  - pip install transformers[torch]
 
 * Dia
   - sudo apt-get install dia
