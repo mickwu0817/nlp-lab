@@ -24,6 +24,14 @@
   - pip install torchtext
   - pip install tensorboard
   - pip install transformers[torch]
+  - pip install -U datasets
+  - pip install evaluate (https://github.com/huggingface/evaluate)
+  - pip install sentencepiece (https://github.com/google/sentencepiece)
+
+
+* Hugging Face Download Location
+  - /home/mick/.cache/huggingface/datasets/
+
 
 * Dia
   - sudo apt-get install dia
