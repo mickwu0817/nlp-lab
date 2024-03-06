@@ -27,6 +27,7 @@
   - pip install -U datasets
   - pip install evaluate (https://github.com/huggingface/evaluate)
   - pip install sentencepiece (https://github.com/google/sentencepiece)
+  - pip install opencc-python-reimplemented (https://yanwei-liu.medium.com/python自然語言處理-四-繁簡轉換利器opencc-74021cbc6de3)
 
 
 * Hugging Face Download Location
